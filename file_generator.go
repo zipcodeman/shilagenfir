@@ -65,16 +65,18 @@ func main() {
     size = len(targ)
   }
 
-  fmt.Println("Read: ", targ)
-
   retval := make([]byte, size)
 
   for i := 0; i < size; i++ {
     for retval[i] != targ[i] {
-      fmt.Println(string(retval))
       retval[i] = nextByte()
+    }
+    if i % (size/100) == 0 {
+      perc := i/(size/100)
+      fmt.Println("Generated ", i, " of ", size, " bytes (", perc, "percent complete)")
     }
   }
   fmt.Println(string(retval))
+
   writeFile(retval, fname)
 }
