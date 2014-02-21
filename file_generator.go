@@ -4,6 +4,8 @@ import (
   "crypto/rand"
   "fmt"
   "os"
+  "flag"
+  "io/ioutil"
 )
 
 func nextByte() byte {
@@ -35,6 +37,44 @@ func writeFile(data []byte, filename string) {
   return
 }
 
+func readFile(filename string) []byte {
+  f, err := ioutil.ReadFile(filename)
+
+  if err != nil {
+    return make([]byte, 0)
+  }
+
+  return f
+}
+
+var fname string
+var size int
+var target string
+
+func init() {
+  flag.StringVar(&fname, "f", "generated_file", "The file name")
+  flag.IntVar(&size, "s", -1,  "Size of the generated file (in bytes)")
+  flag.StringVar(&target, "t", "target",  "the target file")
+  flag.Parse()
+}
+
 func main() {
-  writeFile(nextBytes(100), os.Args[1])
+  targ := readFile(target)
+
+  if (size < 0) {
+    size = len(targ)
+  }
+
+  fmt.Println("Read: ", targ)
+
+  retval := make([]byte, size)
+
+  for i := 0; i < size; i++ {
+    for retval[i] != targ[i] {
+      fmt.Println(string(retval))
+      retval[i] = nextByte()
+    }
+  }
+  fmt.Println(string(retval))
+  writeFile(retval, fname)
 }
