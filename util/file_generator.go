@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
   "crypto/rand"
@@ -23,7 +23,7 @@ func nextBytes(i int) []byte {
 }
 
 func maxByte() int {
-  return int(math.Pow(2, 8))
+  return int(math.Pow(2, 8)) - 1
 }
 
 func getMid(i, j int) int {
