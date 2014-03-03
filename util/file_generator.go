@@ -4,10 +4,91 @@ import (
   "crypto/rand"
   "fmt"
   "os"
-  "flag"
   "io/ioutil"
   "math"
 )
+
+const (
+  GREATER_THAN = iota
+  LESS_THAN = iota
+  EQUALS = iota
+)
+
+type FuzzyFile struct {
+  Max, Mid, Min []byte
+}
+
+func NewFuzzyFile(length int) *FuzzyFile {
+  if (length < 0) {
+    return nil
+  }
+
+  ff := new(FuzzyFile)
+  ff.Max = make([]byte, length)
+  ff.Mid = make([]byte, length)
+  ff.Min = make([]byte, length)
+
+  max := maxByte()
+  min := byte(0)
+
+  mid := getMid(min, max)
+
+  for i := 0; i < len(ff.Mid); i++ {
+    ff.Mid[i] = mid
+    ff.Max[i] = max
+    ff.Min[i] = min
+  }
+
+  return ff
+}
+
+func (ff *FuzzyFile) Update(response []byte) {
+  for i := 0; i < len(ff.Mid); i++ {
+    ff.updateAt(i, response[i])
+  }
+}
+
+func (ff *FuzzyFile) updateAt(i int, response byte) {
+  if response == LESS_THAN {
+    ff.Min[i] = ff.Mid[i] + 1
+  } else if response == GREATER_THAN {
+    ff.Max[i] = ff.Mid[i] - 1
+  } else {
+    ff.Min[i] = ff.Mid[i]
+    ff.Max[i] = ff.Mid[i]
+  }
+
+  ff.Mid[i] = getMid(ff.Min[i], ff.Max[i])
+}
+
+func (ff *FuzzyFile) convergedAt(i int) bool {
+  return ff.Min[i] == ff.Max[i]
+}
+
+func (ff *FuzzyFile) GetUnconvergedRanges() []int {
+  retval := make([]int, 0, len(ff.Min) / 2)
+
+  start := -1
+
+  for i := 0; i < len(ff.Mid); i++ {
+    if ff.convergedAt(i) {
+      if (start >= 0) {
+        retval = append(retval, start, i)
+        start = -1
+      }
+    } else {
+      if (start < 0) {
+        start = i
+      }
+    }
+  }
+
+  if (start >= 0) {
+    retval = append(retval, start, len(ff.Mid) - 1)
+  }
+
+  return retval
+}
 
 func nextByte() byte {
   return nextBytes(1)[0]
@@ -22,64 +103,30 @@ func nextBytes(i int) []byte {
   return b
 }
 
-func maxByte() int {
-  return int(math.Pow(2, 8)) - 1
+func maxByte() byte {
+  return byte(math.Pow(2, 8)) - 1
 }
 
-func getMid(i, j int) int {
-  return (j - i) / 2;
+func getMid(i, j byte) byte {
+  return i + ((j - i) / 2);
 }
 
-func findRangeWithMidpoint(mid, min, max int) (int, int) {
+// True if generated value is less than the target
+// False otherwise
+func GetResponse(bytes, targ []byte) []byte {
+  response := make([]byte, len(bytes))
 
-  val := getMid(min, max)
-
-  for val != mid {
-    if mid < val {
-      min = val
+  for i := 0; i < len(bytes); i++ {
+    if (bytes[i] < targ[i]) {
+      response[i] = LESS_THAN
+    } else if (bytes[i] > targ[i]) {
+      response[i] = GREATER_THAN
     } else {
-      max = val - 1
+      response[i] = EQUALS
     }
-    val = getMid(min, max)
-  }
-
-  return min, max
-}
-
-func getResponse(bytes, targ []byte) []bool {
-  response := make([]bool, len(bytes))
-
-  for i := 0; i < size; i++ {
-    response[i] = bytes[i] < targ[i]
   }
 
   return response
-}
-
-func getBytes(i int) []byte {
-  b := make([]byte, i)
-  siz := getMid(0, maxByte())
-
-  for i := 0; i < len(b); i++ {
-    b[i] = byte(siz)
-  }
-
-  return b
-}
-
-func updateBytes(bytes []byte, response []bool) {
-  for i := 0; i < len(bytes); i++ {
-    mid := int(bytes[i])
-    min, max := findRangeWithMidpoint(mid, 0, maxByte())
-    if response[i] {
-      // it was >= the target
-      max = mid
-    } else {
-      // it was < the target
-      min = mid - 1
-    }
-    bytes[i] = byte(getMid(min, max))
-  }
 }
 
 func writeFile(data []byte, filename string) {
@@ -106,74 +153,4 @@ func readFile(filename string) []byte {
   }
 
   return f
-}
-
-var fname string
-var size int
-var target string
-var targ []byte
-
-func init() {
-  flag.StringVar(&fname, "f", "generated_file", "The file name")
-  flag.IntVar(&size, "s", -1,  "Size of the generated file (in bytes)")
-  flag.StringVar(&target, "t", "target",  "the target file")
-  flag.Parse()
-
-  targ = readFile(target)
-
-  if (size < 0) {
-    size = len(targ)
-  }
-}
-
-func main() {
-  bytes := getBytes(size)
-
-  fmt.Println(string(bytes))
-  response := getResponse(bytes, targ)
-  fmt.Println(response)
-  updateBytes(bytes, response)
-
-  fmt.Println(string(bytes))
-  response = getResponse(bytes, targ)
-  fmt.Println(response)
-  updateBytes(bytes, response)
-
-  fmt.Println(string(bytes))
-  response = getResponse(bytes, targ)
-  fmt.Println(response)
-  updateBytes(bytes, response)
-
-  fmt.Println(string(bytes))
-  response = getResponse(bytes, targ)
-  fmt.Println(response)
-  updateBytes(bytes, response)
-
-  fmt.Println(string(bytes))
-  response = getResponse(bytes, targ)
-  fmt.Println(response)
-  updateBytes(bytes, response)
-
-  fmt.Println(string(bytes))
-  response = getResponse(bytes, targ)
-  fmt.Println(response)
-  updateBytes(bytes, response)
-
-  fmt.Println(string(bytes))
-  return
-
-  retval := make([]byte, size)
-
-  for i := 0; i < size; i++ {
-    for retval[i] != targ[i] {
-      retval[i] = nextByte()
-    }
-    if i % (size/100) == 0 {
-      perc := i/(size/100)
-      fmt.Println("Generated ", i, " of ", size, " bytes (", perc, "percent complete)")
-    }
-  }
-  fmt.Println(string(retval))
-
-  writeFile(retval, fname)
 }
