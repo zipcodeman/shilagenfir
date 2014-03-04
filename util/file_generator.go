@@ -11,11 +11,12 @@ import (
 const (
   GREATER_THAN = iota
   LESS_THAN = iota
-  EQUALS = iota
+  EQUAL_TO = iota
 )
 
 type FuzzyFile struct {
   Max, Mid, Min []byte
+  Round int
 }
 
 func NewFuzzyFile(length int) *FuzzyFile {
@@ -27,6 +28,7 @@ func NewFuzzyFile(length int) *FuzzyFile {
   ff.Max = make([]byte, length)
   ff.Mid = make([]byte, length)
   ff.Min = make([]byte, length)
+  ff.Round = GREATER_THAN
 
   max := maxByte()
   min := byte(0)
@@ -42,20 +44,31 @@ func NewFuzzyFile(length int) *FuzzyFile {
   return ff
 }
 
-func (ff *FuzzyFile) Update(response []byte) {
+func (ff *FuzzyFile) Update(response []bool) {
   for i := 0; i < len(ff.Mid); i++ {
     ff.updateAt(i, response[i])
   }
+  ff.Round = (ff.Round + 1) % 3
 }
 
-func (ff *FuzzyFile) updateAt(i int, response byte) {
-  if response == LESS_THAN {
-    ff.Min[i] = ff.Mid[i] + 1
-  } else if response == GREATER_THAN {
-    ff.Max[i] = ff.Mid[i] - 1
+func (ff *FuzzyFile) updateAt(i int, response bool) {
+  if ff.Round == GREATER_THAN {
+    if response {
+      ff.Max[i] = ff.Mid[i] - 1
+    } else {
+      ff.Min[i] = ff.Mid[i]
+    }
+  } else if ff.Round == LESS_THAN {
+    if response {
+      ff.Min[i] = ff.Mid[i] + 1
+    } else {
+      ff.Max[i] = ff.Mid[i]
+    }
   } else {
-    ff.Min[i] = ff.Mid[i]
-    ff.Max[i] = ff.Mid[i]
+    if response {
+      ff.Min[i] = ff.Mid[i]
+      ff.Max[i] = ff.Mid[i]
+    }
   }
 
   ff.Mid[i] = getMid(ff.Min[i], ff.Max[i])
@@ -111,18 +124,16 @@ func getMid(i, j byte) byte {
   return i + ((j - i) / 2);
 }
 
-// True if generated value is less than the target
-// False otherwise
-func GetResponse(bytes, targ []byte) []byte {
-  response := make([]byte, len(bytes))
+func GetResponse(bytes, targ []byte, round int) []bool {
+  response := make([]bool, len(bytes))
 
   for i := 0; i < len(bytes); i++ {
-    if (bytes[i] < targ[i]) {
-      response[i] = LESS_THAN
-    } else if (bytes[i] > targ[i]) {
-      response[i] = GREATER_THAN
+    if round == GREATER_THAN {
+      response[i] = bytes[i] > targ[i]
+    } else if round == LESS_THAN {
+      response[i] = bytes[i] < targ[i]
     } else {
-      response[i] = EQUALS
+      response[i] = bytes[i] == targ[i]
     }
   }
 

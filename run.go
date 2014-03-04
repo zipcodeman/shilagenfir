@@ -38,14 +38,14 @@ func init() {
 func main() {
   fil := util.NewFuzzyFile(size)
 
-  response := util.GetResponse(fil.Mid, targ)
-
-  fil.Update(response)
-
+  i := 0
   for len(fil.GetUnconvergedRanges()) > 0 {
-    response = util.GetResponse(fil.Mid, targ)
+    response := util.GetResponse(fil.Mid, targ, fil.Round)
     fil.Update(response)
+    fmt.Println(fil.GetUnconvergedRanges())
+    i++
   }
 
   fmt.Println(string(fil.Mid))
+  fmt.Println("Converged in", i, "iterations")
 }
