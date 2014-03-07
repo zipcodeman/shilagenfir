@@ -11,7 +11,7 @@ import (
 const (
   GREATER_THAN = iota
   LESS_THAN = iota
-  EQUAL_TO = iota
+  NUMBER_OF_ROUNDS = iota
 )
 
 type FuzzyFile struct {
@@ -48,7 +48,7 @@ func (ff *FuzzyFile) Update(response []bool) {
   for i := 0; i < len(ff.Mid); i++ {
     ff.updateAt(i, response[i])
   }
-  ff.Round = (ff.Round + 1) % 3
+  ff.Round = (ff.Round + 1) % NUMBER_OF_ROUNDS
 }
 
 func (ff *FuzzyFile) updateAt(i int, response bool) {
@@ -62,11 +62,6 @@ func (ff *FuzzyFile) updateAt(i int, response bool) {
     if response {
       ff.Min[i] = ff.Mid[i] + 1
     } else {
-      ff.Max[i] = ff.Mid[i]
-    }
-  } else {
-    if response {
-      ff.Min[i] = ff.Mid[i]
       ff.Max[i] = ff.Mid[i]
     }
   }
@@ -132,8 +127,6 @@ func GetResponse(bytes, targ []byte, round int) []bool {
       response[i] = bytes[i] > targ[i]
     } else if round == LESS_THAN {
       response[i] = bytes[i] < targ[i]
-    } else {
-      response[i] = bytes[i] == targ[i]
     }
   }
 

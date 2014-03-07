@@ -40,9 +40,15 @@ func main() {
 
   i := 0
   for len(fil.GetUnconvergedRanges()) > 0 {
+    fmt.Println(string(fil.Mid))
     response := util.GetResponse(fil.Mid, targ, fil.Round)
     fil.Update(response)
     fmt.Println(fil.GetUnconvergedRanges())
+    fmt.Println()
+    fmt.Println()
+    fmt.Println()
+    fmt.Println()
+    fmt.Println()
     i++
   }
 
