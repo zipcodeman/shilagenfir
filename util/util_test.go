@@ -38,54 +38,52 @@ func boolArrayEquals(a, b []bool) bool {
   return true
 }
 
-func TestGetResponse(t *testing.T) {
-  if !boolArrayEquals(getResponse([]byte{0}, []byte{50}), []bool{true}) {
-    t.Error("0 is indeed less than 50, sir", getResponse([]byte{0}, []byte{50}))
+func TestGetResponseGreaterThan(t *testing.T) {
+  ze := []byte{0}
+  fi := []byte{50}
+
+  zero_fifty := GetResponse(ze, fi, GREATER_THAN)
+  if !boolArrayEquals(zero_fifty, []bool{false}) {
+    t.Error("0 is indeed greater than 50, sir", zero_fifty)
   }
 
-  if !boolArrayEquals(getResponse([]byte{50}, []byte{0}), []bool{false}) {
-    t.Error("50 is indeed less than 0, sir", getResponse([]byte{50}, []byte{0}))
+  fifty_zero := GetResponse(fi, ze, GREATER_THAN)
+  if !boolArrayEquals(fifty_zero, []bool{true}) {
+    t.Error("50 is indeed greater than 0, sir", fifty_zero)
   }
 
-  if !boolArrayEquals(getResponse([]byte{0}, []byte{0}), []bool{false}) {
-    t.Error("0 is actually equal to, sir", getResponse([]byte{0}, []byte{0}))
-  }
-}
-
-func TestUpdateMinMax(t *testing.T) {
-  min, max := updateMinMax(0, 10, true)
-  if min != 0 && max != 4 {
-    t.Error("Min and max did not match", 0, 4, min, max)
-  }
-
-  min, max = updateMinMax(0, 10, false)
-  if min != 5 && max != 10 {
-    t.Error("Min and max did not match", 5, 10, min, max)
+  zero_zero := GetResponse(ze, ze, GREATER_THAN)
+  if !boolArrayEquals(zero_zero, []bool{false}) {
+    t.Error("0 is actually equal to, sir", zero_zero);
   }
 }
 
-func TestFindRangeWithMidpoint(t *testing.T) {
-  min, max := findRangeWithMidpoint(5, 0, 10)
-  if min != 0 && max != 10 {
-    t.Error("Min and max did not match", 0, 10, min, max)
+func TestGetResponseLessThan(t *testing.T) {
+  ze := []byte{0}
+  fi := []byte{50}
+
+  zero_fifty := GetResponse(ze, fi, LESS_THAN)
+  if !boolArrayEquals(zero_fifty, []bool{true}) {
+    t.Error("0 is indeed less than 50, sir", zero_fifty)
   }
 
-  min, max = findRangeWithMidpoint(2, 0, 10)
-  if min != 0 && max != 4 {
-    t.Error("Min and max did not match", 0, 4, min, max)
+  fifty_zero := GetResponse(fi, ze, LESS_THAN)
+  if !boolArrayEquals(fifty_zero, []bool{false}) {
+    t.Error("50 is indeed less than 0, sir", fifty_zero)
   }
 
-  min, max = findRangeWithMidpoint(7, 0, 10)
-  if min != 5 && max != 10 {
-    t.Error("Min and max did not match", 5, 10, min, max)
+  zero_zero := GetResponse(ze, ze, LESS_THAN)
+  if !boolArrayEquals(zero_zero, []bool{false}) {
+    t.Error("0 is actually equal to, sir", zero_zero);
   }
 }
 
-func BenchmarkFindRangeWithMidpoint(b *testing.B) {
-  for i := 0; i < b.N; i++ {
-    min, max := findRangeWithMidpoint(7, 0, 10)
-    if min != 5 && max != 10 {
-      b.Error("Min and max did not match", 5, 10, min, max)
-    }
+func TestUpdateAt(t *testing.T) {
+  ff := NewFuzzyFile(1)
+
+  ff.updateAt(0, true)
+
+  if ff.Min[0] != 0 && ff.Max[0] != 126 {
+    t.Error("Min and max did not match", 0, 126, ff.Min, ff.Max)
   }
 }
