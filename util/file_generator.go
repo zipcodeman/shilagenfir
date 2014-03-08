@@ -92,7 +92,21 @@ func (ff *FuzzyFile) GetUnconvergedRanges() []int {
   }
 
   if (start >= 0) {
-    retval = append(retval, start, len(ff.Mid) - 1)
+    retval = append(retval, start, len(ff.Mid))
+  }
+
+  return retval
+}
+
+func (ff *FuzzyFile) ConvergedBytes() []byte {
+  ranges := ff.GetUnconvergedRanges()
+  retval := make([]byte, len(ff.Min))
+  copy(retval, ff.Mid)
+
+  for i := 0; i < len(ranges); i += 2 {
+    for j := ranges[i]; j < ranges[i + 1]; j++ {
+      retval[j] = '_'
+    }
   }
 
   return retval

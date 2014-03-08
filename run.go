@@ -40,7 +40,7 @@ func main() {
 
   i := 0
   for len(fil.GetUnconvergedRanges()) > 0 {
-    fmt.Println(string(fil.Mid))
+    fmt.Println(string(fil.ConvergedBytes()))
     response := util.GetResponse(fil.Mid, targ, fil.Round)
     fil.Update(response)
     fmt.Println(fil.GetUnconvergedRanges())
