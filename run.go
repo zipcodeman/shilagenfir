@@ -5,6 +5,8 @@ import (
   "fmt"
   "flag"
   "io/ioutil"
+  "log"
+  "os"
 )
 
 func readFile(filename string) []byte {
@@ -19,23 +21,36 @@ func readFile(filename string) []byte {
 
 var fname string
 var size int
+var port int
 var target string
 var targ []byte
+var server bool
+var logger *log.Logger
 
 func init() {
   flag.StringVar(&fname, "f", "generated_file", "The file name")
-  flag.IntVar(&size, "s", -1,  "Size of the generated file (in bytes)")
   flag.StringVar(&target, "t", "target",  "the target file")
+  flag.IntVar(&port, "p", 15231, "the port to listen/connect to")
+  flag.BoolVar(&server, "s", false, "start in server mode")
   flag.Parse()
 
   targ = readFile(target)
 
-  if (size < 0) {
-    size = len(targ)
-  }
+  size = len(targ)
+
+  logger = log.New(os.Stdout, "", log.Ldate | log.Ltime)
 }
 
 func main() {
+  if server {
+    logger.Println("Starting server")
+    runServer()
+  } else {
+    logger.Println("Starting client")
+    runClient()
+    return
+  }
+
   fil := util.NewFuzzyFile(size)
 
   i := 0
