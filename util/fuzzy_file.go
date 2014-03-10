@@ -1,8 +1,7 @@
 package util
 
 import (
-  "crypto/rand"
-  "fmt"
+  "math/rand"
   "os"
   "io/ioutil"
   "math"
@@ -33,7 +32,7 @@ func NewFuzzyFile(length int) *FuzzyFile {
   max := maxByte()
   min := byte(0)
 
-  mid := getMid(min, max)
+  mid := getNewMid(min, max)
 
   for i := 0; i < len(ff.Mid); i++ {
     ff.Mid[i] = mid
@@ -66,7 +65,7 @@ func (ff *FuzzyFile) updateAt(i int, response bool) {
     }
   }
 
-  ff.Mid[i] = getMid(ff.Min[i], ff.Max[i])
+  ff.Mid[i] = getNewMid(ff.Min[i], ff.Max[i])
 }
 
 func (ff *FuzzyFile) convergedAt(i int) bool {
@@ -112,25 +111,16 @@ func (ff *FuzzyFile) ConvergedBytes() []byte {
   return retval
 }
 
-func nextByte() byte {
-  return nextBytes(1)[0]
-}
-
-func nextBytes(i int) []byte {
-  b := make([]byte, i)
-  _, err := rand.Read(b)
-  if err != nil {
-    fmt.Println("error: ", err)
-   }
-  return b
-}
-
 func maxByte() byte {
   return byte(math.Pow(2, 8)) - 1
 }
 
-func getMid(i, j byte) byte {
-  return i + ((j - i) / 2);
+func getNewMid(min, max byte) byte {
+  if max - min > 0 {
+    return min + byte(rand.Intn(int(max - min)))
+  } else {
+    return min
+  }
 }
 
 func GetResponse(bytes, targ []byte, round int) []bool {
